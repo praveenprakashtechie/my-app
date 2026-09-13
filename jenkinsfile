@@ -2,7 +2,11 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "myapp"
+        AWS_REGION = 'ap-south-2'
+        AWS_ACCOUNT_ID = '690084475612'
+        ECR_REPOSITORY = 'myapp'
+        ECR_REGISTRY = "${690084475612}.dkr.ecr.${ap-south-2}.amazonaws.com"
+        IMAGE_NAME = "${ECR_REGISTRY}/${ECR_REPOSITORY}"
     }
 
     stages {
@@ -15,7 +19,9 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t ${IMAGE_NAME}:${BUILD_NUMBER} .'
+                sh '''
+                    docker build -t ${IMAGE_NAME}:${BUILD_NUMBER} .
+                '''
             }
         }
 
@@ -33,6 +39,25 @@ pipeline {
 
                     docker stop test-container
                     docker rm test-container
+                '''
+            }
+        }
+
+        stage('Login to ECR') {
+            steps {
+                sh '''
+                    aws ecr get-login-password --region ${ap-south-2} | \
+                    docker login \
+                    --username AWS \
+                    --password-stdin ${ECR_REGISTRY}
+                '''
+            }
+        }
+
+        stage('Push to ECR') {
+            steps {
+                sh '''
+                    docker push ${IMAGE_NAME}:${BUILD_NUMBER}
                 '''
             }
         }
