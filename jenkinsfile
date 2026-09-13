@@ -5,7 +5,7 @@ pipeline {
         AWS_REGION = 'ap-south-2'
         AWS_ACCOUNT_ID = '690084475612'
         ECR_REPOSITORY = 'myapp'
-        ECR_REGISTRY = "${690084475612}.dkr.ecr.${ap-south-2}.amazonaws.com"
+        ECR_REGISTRY = "$690084475612.dkr.ecr.$ap-south-2.amazonaws.com"
         IMAGE_NAME = "${ECR_REGISTRY}/${ECR_REPOSITORY}"
     }
 
@@ -46,7 +46,7 @@ pipeline {
         stage('Login to ECR') {
             steps {
                 sh '''
-                    aws ecr get-login-password --region ${ap-south-2} | \
+                    aws ecr get-login-password --region $ap-south-2 | \
                     docker login \
                     --username AWS \
                     --password-stdin ${ECR_REGISTRY}
