@@ -1,0 +1,46 @@
+pipeline {
+    agent any
+
+    environment {
+        IMAGE_NAME = "myapp"
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t ${IMAGE_NAME}:${BUILD_NUMBER} .'
+            }
+        }
+
+        stage('Test Container') {
+            steps {
+                sh '''
+                    docker run -d \
+                    --name test-container \
+                    -p 5001:5000 \
+                    ${IMAGE_NAME}:${BUILD_NUMBER}
+
+                    sleep 5
+
+                    curl -f http://localhost:5001/health
+
+                    docker stop test-container
+                    docker rm test-container
+                '''
+            }
+        }
+    }
+
+    post {
+        always {
+            sh 'docker image prune -f || true'
+        }
+    }
+}
